@@ -24,9 +24,13 @@ X=0
 Y=1
 W=2
 H=3
+SCREENX=3
 
-vel=[0,0,700]
+vel=[0,0,700,200]
 jumpPower=-25
+
+loadSonicBg=image.load("sonicbg.png")
+#sonicBg=transform.scale(loadSonicBg,(,)) transform later
 
 
 
@@ -35,9 +39,13 @@ jumpPower=-25
 #Functions
 
 def drawScene(player,platforms):
-    draw.rect(screen,blue,player)
+    vel[SCREENX] = width//2
+    offset=vel[SCREENX]-player[X]
+    screen.blit(loadSonicBg,(offset,0))
     for p in platforms:
-        draw.rect(screen,green,p)
+        shifted=p.move(offset,0)
+        draw.rect(screen,green,shifted)
+    draw.rect(screen,blue,[vel[SCREENX],player[Y],player[W],player[H]])
 
     
 
@@ -50,10 +58,12 @@ def move(p):
     vel[X]=0
     if keys[K_LEFT]:
         vel[X]=-5
-    if keys[K_RIGHT]:
+    elif keys[K_RIGHT]:
         vel[X]=5
-    p[X]+=vel[X]#horizontal movement
 
+    vel[SCREENX]=p[X]  # camera always follows player exactly
+
+    p[X]+=vel[X]#horizontal movement
     vel[Y]+=gravity#acceleration
 
 def check(p,plats):
@@ -83,12 +93,21 @@ def level1():
 
     counter=0
 
-    platforms=[Rect(100,700,1000,100)]
-    player=Rect(200,600,20,20)
+    vel[X]=0
+    vel[Y]=0
+    vel[2]=700
+    vel[SCREENX]=200
+
+
+
+    platforms=[Rect(100,700,1000,100),
+               Rect(400,580,200,20),
+               Rect(800,500,150,20),
+               Rect(1200,450,200,20)]
+    player=Rect(200,600,50,50)
 
     while running:
 
-        screen.fill(white)
 
         for evt in event.get():
             if evt.type==QUIT:
@@ -127,9 +146,9 @@ def mainMenu():
 
 
         for evt in event.get():
-            if evt.type == QUIT:
+            if evt.type==QUIT:
                 return "exit"
-            if evt.type == MOUSEBUTTONDOWN:
+            if evt.type==MOUSEBUTTONDOWN:
                 if evt.button==1:   
                     if menuButtons[1].collidepoint(mx,my):
                         return "level1"
