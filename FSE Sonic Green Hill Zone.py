@@ -22,15 +22,16 @@ white=(255,255,255)
 gravity=1
 X=0
 Y=1
-W=2
-H=3
-SCREENX=3
+rW=2
+grndLv=2
+rH=3
+screenX=3
 
 vel=[0,0,700,200]
 jumpPower=-25
 
 loadSonicBg=image.load("sonicbg.png")
-#sonicBg=transform.scale(loadSonicBg,(,)) transform later
+sonicBg=transform.scale(loadSonicBg,(7200,900))
 
 
 
@@ -39,20 +40,22 @@ loadSonicBg=image.load("sonicbg.png")
 #Functions
 
 def drawScene(player,platforms):
-    vel[SCREENX] = width//2
-    offset=vel[SCREENX]-player[X]
-    screen.blit(loadSonicBg,(offset,0))
+    vel[screenX] = width//2
+    offset=vel[screenX]-player[X]
+    screen.blit(sonicBg,(offset,0))
+
     for p in platforms:
         shifted=p.move(offset,0)
         draw.rect(screen,green,shifted)
-    draw.rect(screen,blue,[vel[SCREENX],player[Y],player[W],player[H]])
+    #!!!!!!!!!!!!!!!!!!!!!!
+    draw.rect(screen,blue,[vel[screenX]-player[rW]//2,player[Y],player[rW],player[rH]])
 
     
 
 def move(p):
     keys=key.get_pressed()
 
-    if keys[K_SPACE] and vel[Y]==0 and p[Y]+p[H]==vel[2]:
+    if keys[K_SPACE] and vel[Y]==0 and p[Y]+p[rH]==vel[grndLv]:
         vel[Y]=jumpPower
 
     vel[X]=0
@@ -61,18 +64,18 @@ def move(p):
     elif keys[K_RIGHT]:
         vel[X]=5
 
-    vel[SCREENX]=p[X]  # camera always follows player exactly
-
+    #!!!!!!!!!!
+    #vel[screenX]=p[X]  #camera always follows player exactly
     p[X]+=vel[X]#horizontal movement
     vel[Y]+=gravity#acceleration
 
 def check(p,plats):
-    'check if the players "lands" on one of the platforms'
+    #check if the players lands on one of the platforms
     for plat in plats:
-        if p[X]+p[W]>plat[X] and p[X]<plat[X]+plat[W] and p[Y]+p[H]<=plat[Y] and p[Y]+p[H]+vel[Y]>=plat[Y]:
+        if p[X]+p[rW]>plat[X] and p[X]<plat[X]+plat[rW] and p[Y]+p[rH]<=plat[Y] and p[Y]+p[rH]+vel[Y]>=plat[Y]:
             vel[2]=plat[Y]
             vel[Y]=0#stop moving
-            p[Y]=vel[2]-p[H]
+            p[Y]=vel[2]-p[rH]
     p[Y]+=vel[Y]#vertical movement
 
 
@@ -96,7 +99,7 @@ def level1():
     vel[X]=0
     vel[Y]=0
     vel[2]=700
-    vel[SCREENX]=200
+    vel[screenX]=200
 
 
 
@@ -104,7 +107,8 @@ def level1():
                Rect(400,580,200,20),
                Rect(800,500,150,20),
                Rect(1200,450,200,20)]
-    player=Rect(200,600,50,50)
+    
+    player=Rect(200,600,80,80)
 
     while running:
 
