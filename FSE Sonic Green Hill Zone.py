@@ -31,7 +31,7 @@ vel=[0,0,700,200]
 jumpPower=-25
 
 loadSonicBg=image.load("sonicbg.png")
-sonicBg=transform.scale(loadSonicBg,(32400,4050))
+sonicBg=transform.scale(loadSonicBg,(21600,2700))
 
 
 
@@ -42,7 +42,7 @@ sonicBg=transform.scale(loadSonicBg,(32400,4050))
 def drawScene(player,platforms):
     vel[screenX] = width//2
     offset=vel[screenX]-player[X]
-    screen.blit(sonicBg,(offset,-2350))
+    screen.blit(sonicBg,(offset,-1600))
 
     for p in platforms:
         shifted=p.move(offset,0)
