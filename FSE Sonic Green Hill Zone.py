@@ -1,4 +1,4 @@
-#FSE By Brayden Wang and Joel Langton
+#FSE By BW & JL
 #Sonic The Hedgehog: Green Hill Zone
 
 from pygame import *
@@ -30,8 +30,8 @@ screenX=3
 vel=[0,0,700,200]
 jumpPower=-25
 
-loadSonicBg=image.load("sonicbg.png")
-sonicBg=transform.scale(loadSonicBg,(21600,2700))
+loadSonicBg=image.load("pics/sonicbg.png")
+sonicBg=transform.scale(loadSonicBg,(36720,4590))
 
 
 
@@ -42,7 +42,7 @@ sonicBg=transform.scale(loadSonicBg,(21600,2700))
 def drawScene(player,platforms):
     vel[screenX] = width//2
     offset=vel[screenX]-player[X]
-    screen.blit(sonicBg,(offset,-1600))
+    screen.blit(sonicBg,(offset,-2720))
 
     for p in platforms:
         shifted=p.move(offset,0)
