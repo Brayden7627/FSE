@@ -30,7 +30,7 @@ screenX=3
 vel=[0,0,700,200]
 jumpPower=-25
 
-loadSonicBg=image.load("pics/sonicbg.png")
+loadSonicBg=image.load("pics/Sonic BG final.png")
 sonicBg=transform.scale(loadSonicBg,(36720,4590))
 
 
