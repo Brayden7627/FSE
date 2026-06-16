@@ -33,8 +33,6 @@ H = 3
 ROW = 4
 COL = 5
 
-SPRITE_W = 110
-SPRITE_H = 100
 
 bgImg     = transform.scale(image.load("pics/Sonic BG final.png"), (36720, 4590))
 menuBgImg = transform.scale(image.load("pics/sonicMenuBG.png"), (w, h))
@@ -502,17 +500,19 @@ def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bomb
             draw.circle(screen, ballColor, (drawX, drawY), radius)
             draw.circle(screen, white,     (drawX, drawY), radius - 10, 3)
         else:
-            frame       = sonicPics[p[ROW]][int(p[COL])]
-            frameScaled = transform.scale(frame, (SPRITE_W, SPRITE_H))
+            frame    = sonicPics[p[ROW]][int(p[COL])]
+            origW    = frame.get_width()
+            origH    = frame.get_height()
+            frameScaled = transform.scale(frame, (origW * 3, origH * 3))
 
             if godMode and (powerTimer % 4 < 2):
-                tintSurf = Surface((SPRITE_W, SPRITE_H), SRCALPHA)
+                tintSurf = Surface((origW * 3, origH * 3), SRCALPHA)
                 tintSurf.fill((255, 255, 0, 140))
                 frameScaled = frameScaled.copy()
                 frameScaled.blit(tintSurf, (0, 0), special_flags=BLEND_RGBA_MULT)
 
-            drawX = p[X] - cam[0] - (SPRITE_W - p[W]) // 2
-            drawY = p[Y] - cam[1] - (SPRITE_H - p[H]) // 2
+            drawX = p[X] - cam[0] - (origW * 3 - p[W]) // 2
+            drawY = p[Y] - cam[1] - (origH * 3 - p[H]) // 2
             screen.blit(frameScaled, (drawX, drawY))
 
             if godMode:
