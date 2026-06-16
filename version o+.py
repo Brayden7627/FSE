@@ -1,4 +1,4 @@
-#version n+
+#version o+ (fixed: n+ movement & placement, 3/4-down camera)
 
 from pygame import *
 from math import *
@@ -458,21 +458,11 @@ def handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast):
     p[X] += vel[0]
     vel[1] += 1
 
-# Keep player inside the map horizontally
-    MAP_LEFT  = 0
-    MAP_RIGHT = 36720
-    p[X] = max(MAP_LEFT, min(p[X], MAP_RIGHT - p[W]))
-
     return isJumping, isRolling, xPressedLast
 
 def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPad, monitor, star, powerTimer):
     cam[0] += ((p[X] - w // 2) - cam[0]) * 0.08
-    cam[1] += ((p[Y] - h // 2) - cam[1]) * 0.08
-
-    # Clamp camera so it never shows outside the background
-    BG_W, BG_H = 36720, 4590
-    cam[0] = max(0, min(cam[0], BG_W - w))
-    cam[1] = max(-2720, min(cam[1], BG_H - 2720 - h))
+    cam[1] += ((p[Y] - h * 2 // 3) - cam[1]) * 0.08
 
     screen.blit(bgImg, (-cam[0], -2720 - cam[1]))
 
@@ -604,7 +594,7 @@ def mainMenu():
 
 def playLevel():
     c = time.Clock()
-    p   = [200, 100, 80, 80, 0, 0]
+    p   = [200, 550, 80, 80, 0, 0]
     vel = [0, 0]
     cam = [0, 0]
 
@@ -650,6 +640,9 @@ def playLevel():
                 return "menu"
 
         if lives <= 0:
+            screen.fill((0, 0, 0))
+            display.flip()
+            time.wait(3000)
             return "menu"
 
         elapsedTime += 1.0 / 60.0

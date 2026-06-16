@@ -1,4 +1,4 @@
-#FSE By BW & JL
+
 #Sonic The Hedgehog: Green Hill Zone
 
 from pygame import *
