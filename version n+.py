@@ -358,7 +358,7 @@ def getGround(p, cam):
     for y in range(sy, sy + 300):
         if 0 <= y < h:
             c = screen.get_at((sx, y))[:3]
-            if abs(c[0] - dirt[0]) <= 15 and abs(c[1] - dirt[1]) <= 15 and abs(c[2] - dirt[2]) <= 15:
+            if c[0] == 69 and c[1] == 23 and c[2] == 0:  # exact match only
                 return y + cam[1]
         else:
             break
