@@ -301,15 +301,16 @@ def updateProjectiles(projectiles):
                     updated.append(pr)
     return updated
 
-def drawEnemies(cam, enemies, fishes, bombers, projectiles, winBox, jumpPad, monitor, star):
+def drawEnemies(cam, enemies, fishes, bombers, projectiles, winBox, jumpPads, monitor, star):
     draw.rect(screen, yellow, (winBox[0] - cam[0], winBox[1] - cam[1], winBox[2], winBox[3]))
 
-    if jumpPad[4] == True:
-        frame = jumpPics[1]
-    else:
-        frame = jumpPics[0]
-    frameScaled = transform.scale(frame, (jumpPad[2], jumpPad[3]))
-    screen.blit(frameScaled, (jumpPad[0] - cam[0], jumpPad[1] - cam[1]))
+    for jumpPad in jumpPads:
+        if jumpPad[4] == True:
+            frame = jumpPics[1]
+        else:
+            frame = jumpPics[0]
+        frameScaled = transform.scale(frame, (jumpPad[2], jumpPad[3]))
+        screen.blit(frameScaled, (jumpPad[0] - cam[0], jumpPad[1] - cam[1]))
 
     if monitor[4] == False:
         mFrame = transform.scale(monitorActiveImg, (monitor[2], monitor[3]))
@@ -615,7 +616,7 @@ def handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast, rollF
 
     return isJumping, isRolling, xPressedLast, rollFrame
 
-def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPad, monitor, star, powerTimer, rollFrame, vel, score):
+def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPads, monitor, star, powerTimer, rollFrame, vel, score):
     cam[0] += ((p[X] - w // 2) - cam[0]) * 0.08
     cam[1] += ((p[Y] - h // 2) - cam[1]) * 0.08
 
@@ -628,7 +629,7 @@ def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bomb
 
     drawHud(cam, coinCount, lives, coins, elapsedTime, powerTimer, score)
     drawDroppedCoins(cam, droppedCoins)
-    drawEnemies(cam, enemies, fishes, bombers, projectiles, winBox, jumpPad, monitor, star)
+    drawEnemies(cam, enemies, fishes, bombers, projectiles, winBox, jumpPads, monitor, star)
 
     godMode = powerTimer > 0
 
@@ -1004,23 +1005,38 @@ def playLevel():
     ]
 
     enemies = [
-        [600, 405, 140, 100, 400, 1000, 2, 0.0]
+        [7917, 264, 140, 100, 7717, 8117, 2, 0.0],
+        [7923, 264, 140, 100, 7723, 8123, 2, 0.0],
     ]
 
     fishes = [
-        [450, 650, 100, 100, False, 0.0, 650, 60, 0.0]
+        [4078, 496, 100, 100, False, 0.0, 496, 60, 0.0],
+        [4078, 496, 100, 100, False, 0.0, 496, 60, 0.0],
+        [9585,  97, 100, 100, False, 0.0,  97, 60, 0.0],
+        [9873,  95, 100, 100, False, 0.0,  95, 60, 0.0],
     ]
 
     bombers = [
-        [1400, 250, 110, 80, 1100, 1700, 2, 0, False, 0.0]
+        [8555,  -24, 110, 80,  8355,  8755, 2, 0, False, 0.0],
+        [3702,  167, 110, 80,  3502,  3902, 2, 0, False, 0.0],
+        [5307,   96, 110, 80,  5107,  5507, 2, 0, False, 0.0],
+        [12598, -520, 110, 80, 12398, 12798, 2, 0, False, 0.0],
+        [12081, -549, 110, 80, 11881, 12281, 2, 0, False, 0.0],
+        [17936, -1664, 110, 80, 17736, 18136, 2, 0, False, 0.0],
     ]
+
     projectiles  = []
     droppedCoins = []
 
     winBox  = [2600, 350, 100, 100]
-    jumpPad = [500, 430, 120, 80, False, 0]
+    jumpPads = [
+        [19253, -1397, 120, 80, False, 0],
+        [20171, -1667, 120, 80, False, 0],
+        [2888,   152,  120, 80, False, 0],
+        [12957,  -476, 120, 80, False, 0],
+    ]
 
-    monitor = [1800, 400, 60, 60, False]
+    monitor = [17420, -1451, 60, 60, False]
     star    = [0.0, 0.0, False, 0.0]
 
     while True:
@@ -1029,6 +1045,16 @@ def playLevel():
                 return "menu"
 
         if lives <= 0:
+            gameOverStart = time.get_ticks()
+            fLarge = font.SysFont(None, 120)
+            while time.get_ticks() - gameOverStart < 3000:
+                for e in event.get():
+                    if e.type == QUIT:
+                        return "exit"
+                screen.fill((0, 0, 0))
+                txt = fLarge.render("GAME OVER!", True, red)
+                screen.blit(txt, (w // 2 - txt.get_width() // 2, h // 2 - txt.get_height() // 2))
+                display.flip()
             return "menu"
 
         elapsedTime += 1.0 / 60.0
@@ -1078,19 +1104,20 @@ def playLevel():
         # ... your jumpPad, monitors, and render function are down here ...
         playerRect = Rect(p[X], p[Y], p[W], p[H])
 
-        if jumpPad[4] == True:
-            jumpPad[5] -= 1
-            if jumpPad[5] <= 0:
-                jumpPad[4] = False
+        for jumpPad in jumpPads:
+            if jumpPad[4] == True:
+                jumpPad[5] -= 1
+                if jumpPad[5] <= 0:
+                    jumpPad[4] = False
 
-        if playerRect.colliderect(Rect(jumpPad[0], jumpPad[1], jumpPad[2], jumpPad[3])):
-            vel[1]    = -32
-            isJumping = True
-            isRolling = False
-            p[ROW]    = 3
-            p[COL]    = 0
-            jumpPad[4] = True
-            jumpPad[5] = 15
+            if playerRect.colliderect(Rect(jumpPad[0], jumpPad[1], jumpPad[2], jumpPad[3])):
+                vel[1]    = -32
+                isJumping = True
+                isRolling = False
+                p[ROW]    = 3
+                p[COL]    = 0
+                jumpPad[4] = True
+                jumpPad[5] = 15
 
         if monitor[4] == False:
             if playerRect.colliderect(Rect(monitor[0], monitor[1], monitor[2], monitor[3])):
@@ -1113,7 +1140,7 @@ def playLevel():
         if playerRect.colliderect(Rect(winBox[0], winBox[1], winBox[2], winBox[3])):
             return drawVictoryScreen(elapsedTime, score)
 
-        render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPad, monitor, star, powerTimer, rollFrame, vel, score)
+        render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPads, monitor, star, powerTimer, rollFrame, vel, score)
 
         display.flip()
         c.tick(60)
