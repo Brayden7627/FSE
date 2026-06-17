@@ -668,7 +668,6 @@ def drawVictoryScreen(elapsedTime):
             if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
                 return "menu"
 
-
         overlay = Surface((w, h))
         overlay.fill((0, 0, 0))
         overlay.set_alpha(10)
@@ -787,11 +786,6 @@ def playLevel():
         for e in event.get():
             if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
                 return "menu"
-            if e.type == MOUSEBUTTONDOWN and e.button == 1:
-                mx, my = mouse.get_pos()
-                worldX = int(mx + cam[0])
-                worldY = int(my + cam[1])
-                print(f"{worldX}, {worldY}", flush=True)
 
         if lives <= 0:
             return "menu"
