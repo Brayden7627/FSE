@@ -1,4 +1,4 @@
-#version o+ (fixed: n+ movement & placement, 3/4-down camera)
+#version n+
 
 from pygame import *
 from math import *
@@ -33,10 +33,8 @@ H = 3
 ROW = 4
 COL = 5
 
-SPRITE_W = 110
-SPRITE_H = 100
 
-bgImg     = transform.scale(image.load("pics/Sonic BG final.png"), (36720, 4590))
+bgImg     = transform.scale(image.load("pics/Sonic BG final.png"), (30959, 3672))
 menuBgImg = transform.scale(image.load("pics/sonicMenuBG.png"), (w, h))
 
 def addPics(folder, name, start, end):
@@ -53,6 +51,25 @@ sonicJump  = [image.load("pics/sonic sprites/sonicjump.png")]
 sonicPics = [sonicRight, sonicLeft, sonicIdle, sonicJump]
 
 coinPics = addPics("coins", "coin", 1, 4)
+
+
+# Roll & Slide Animations
+sonicRollStart = addPics("sonic sprites", "sonicroll", 1, 6)
+sonicBallLoop  = [image.load("pics/sonic sprites/mainsonicroll.png")]
+sonicSlide     = addPics("sonic sprites", "sonicslide", 1, 3)
+
+sonicPics.append(sonicSlide)  # index 4 = slide
+
+fishPics = addPics("fish", "fish", 1, 3)
+crabPics = addPics("crab", "crab", 1, 5)
+jumpPics = addPics("jump", "jump", 1, 3)
+
+monitorActiveImg = image.load("pics/powerup/powerup1.png")
+monitorBrokenImg = image.load("pics/powerup/powerup2.png")
+abilityItemImg   = image.load("pics/powerup/ability.png")
+
+buzzFlightPics = addPics("buzzbomber", "buzz", 1, 6)
+buzzShotPic    = image.load("pics/buzzbomber/buzzshot.png")
 
 def updateCoins(coins):
     for coin in coins:
@@ -140,7 +157,32 @@ def collectDroppedCoins(p, coinCount, droppedCoins):
 
 def updateEnemies(cam, enemies, p):
     for enemy in enemies:
+        enemy[7] += 0.15
+        if enemy[7] >= len(crabPics):
+            enemy[7] = 0.0
+
         dist = sqrt((enemy[0] - p[X])**2 + (enemy[1] - p[Y])**2)
+
+        if dist < 350:
+            if enemy[0] < p[X]:
+                enemy[6] = abs(enemy[6])
+                enemy[0] += 2.5
+            else:
+                enemy[6] = -abs(enemy[6])
+                enemy[0] -= 2.5
+        else:
+            enemy[0] += enemy[6]
+            if enemy[0] <= enemy[4]:
+                enemy[0] = enemy[4]
+                enemy[6] = abs(enemy[6])
+            elif enemy[0] >= enemy[5]:
+                enemy[0] = enemy[5]
+                enemy[6] = -abs(enemy[6])
+
+        dummyEnemy = [enemy[0], enemy[1], enemy[2], enemy[3]]
+        gY = getGround(dummyEnemy, cam)
+        if gY != None:
+            enemy[1] = gY - enemy[3]
 
         if dist < 350:
             if enemy[4] <= p[X]:
@@ -182,47 +224,60 @@ def updateEnemies(cam, enemies, p):
 
 def updateFishEnemies(fishes):
     for fish in fishes:
+        fish[8] += 0.15
+        if fish[8] >= len(fishPics):
+            fish[8] = 0
+
         if fish[4] == False:
             fish[7] -= 1
             if fish[7] <= 0:
                 fish[4] = True
-                fish[5] = -20
+                fish[5] = -14
         else:
             fish[1] += fish[5]
-            fish[5] += 0.6
+            fish[5] += 0.3
 
             if fish[1] >= fish[6]:
                 fish[1] = fish[6]
                 fish[4] = False
                 fish[5] = 0
-                fish[7] = 90
+                fish[7] = 60
 
 def updateBuzzBombers(bombers, p, projectiles):
     for b in bombers:
-        if b[7] > 0:
-            b[7] -= 1
-        else:
-            if b[8] == True:
-                b[8] = False
-                b[7] = 60
-            else:
-                b[0] += b[6]
-                if b[0] <= b[4]:
-                    b[0] = b[4]
-                    b[6] = abs(b[6])
-                elif b[0] >= b[5]:
-                    b[0] = b[5]
-                    b[6] = -abs(b[6])
+        b[9] += 0.20
+        if b[9] >= len(buzzFlightPics):
+            b[9] = 0.0
 
-                if abs(p[X] - b[0]) < 250:
-                    if p[Y] > b[1]:
-                        b[8] = True
-                        b[7] = 30
-                        if p[X] < b[0]:
-                            projVx = -5
-                        else:
-                            projVx = 5
-                        projectiles.append([b[0] + 20, b[1] + 30, 20, 10, projVx, 5])
+        if b[8] == True:
+            if b[7] > 0:
+                b[7] -= 1
+                if b[7] == 0:
+                    if p[X] < b[0]:
+                        projVx = -5
+                        b[6] = -abs(b[6])
+                    else:
+                        projVx = 5
+                        b[6] = abs(b[6])
+                    projectiles.append([b[0] + 20, b[1] + 40, 20, 10, projVx, 5])
+            else:
+                b[8] = False
+                b[7] = 120
+        else:
+            if b[7] > 0:
+                b[7] -= 1
+
+            b[0] += b[6]
+            if b[0] <= b[4]:
+                b[0] = b[4]
+                b[6] = abs(b[6])
+            elif b[0] >= b[5]:
+                b[0] = b[5]
+                b[6] = -abs(b[6])
+
+            if b[7] <= 0 and abs(p[X] - b[0]) < 300 and p[Y] > b[1]:
+                b[8] = True
+                b[7] = 60
 
 def updateProjectiles(projectiles):
     updated = []
@@ -237,23 +292,51 @@ def updateProjectiles(projectiles):
 
 def drawEnemies(cam, enemies, fishes, bombers, projectiles, winBox, jumpPad, monitor, star):
     draw.rect(screen, yellow, (winBox[0] - cam[0], winBox[1] - cam[1], winBox[2], winBox[3]))
-    draw.rect(screen, lightBlue, (jumpPad[0] - cam[0], jumpPad[1] - cam[1], jumpPad[2], jumpPad[3]))
 
-    mColor = blue if monitor[4] == False else grey
-    draw.rect(screen, mColor, (monitor[0] - cam[0], monitor[1] - cam[1], monitor[2], monitor[3]))
+    if jumpPad[4] == True:
+        frame = jumpPics[1]
+    else:
+        frame = jumpPics[0]
+    frameScaled = transform.scale(frame, (jumpPad[2], jumpPad[3]))
+    screen.blit(frameScaled, (jumpPad[0] - cam[0], jumpPad[1] - cam[1]))
+
     if monitor[4] == False:
-        draw.rect(screen, yellow, (monitor[0] + 15 - cam[0], monitor[1] + 15 - cam[1], 30, 30))
+        mFrame = transform.scale(monitorActiveImg, (monitor[2], monitor[3]))
+        screen.blit(mFrame, (monitor[0] - cam[0], monitor[1] - cam[1]))
+    else:
+        brokenW = monitor[2]
+        brokenH = monitor[3] // 2
+        mFrame = transform.scale(monitorBrokenImg, (brokenW, brokenH))
+        screen.blit(mFrame, (monitor[0] - cam[0], monitor[1] + brokenH - cam[1]))
 
     if star[2] == True:
-        draw.circle(screen, white, (int(star[0] - cam[0]), int(star[1] - cam[1])), 15)
-        draw.circle(screen, yellow, (int(star[0] - cam[0]), int(star[1] - cam[1])), 8)
+        abilityScaled = transform.scale(abilityItemImg, (60, 60))
+        screen.blit(abilityScaled, (int(star[0] - cam[0] - 30), int(star[1] - cam[1] - 30)))
 
     for enemy in enemies:
-        draw.rect(screen, red, (enemy[0] - cam[0], enemy[1] - cam[1], enemy[2], enemy[3]))
+        frame = crabPics[int(enemy[7])]
+        frameScaled = transform.scale(frame, (enemy[2], enemy[3]))
+        if enemy[6] < 0:
+            frameScaled = transform.flip(frameScaled, True, False)
+        screen.blit(frameScaled, (enemy[0] - cam[0], enemy[1] - cam[1]))
+
     for fish in fishes:
-        draw.rect(screen, orange, (fish[0] - cam[0], fish[1] - cam[1], fish[2], fish[3]))
+        frame = fishPics[int(fish[8])]
+        frameScaled = transform.scale(frame, (fish[2], fish[3]))
+        if fish[5] > 0:
+            frameScaled = transform.flip(frameScaled, False, True)
+        screen.blit(frameScaled, (fish[0] - cam[0], fish[1] - cam[1]))
+
     for b in bombers:
-        draw.rect(screen, blue, (b[0] - cam[0], b[1] - cam[1], b[2], b[3]))
+        if b[8] == True:
+            bFrame = buzzShotPic
+        else:
+            bFrame = buzzFlightPics[int(b[9])]
+        bScaled = transform.scale(bFrame, (b[2], b[3]))
+        if b[6] > 0:
+            bScaled = transform.flip(bScaled, True, False)
+        screen.blit(bScaled, (b[0] - cam[0], b[1] - cam[1]))
+
     for pr in projectiles:
         draw.rect(screen, yellow, (pr[0] - cam[0], pr[1] - cam[1], pr[2], pr[3]))
 
@@ -358,11 +441,36 @@ def getGround(p, cam):
     for y in range(sy, sy + 300):
         if 0 <= y < h:
             c = screen.get_at((sx, y))[:3]
-            if abs(c[0] - dirt[0]) <= 15 and abs(c[1] - dirt[1]) <= 15 and abs(c[2] - dirt[2]) <= 15:
+            if c[0] == 69 and c[1] == 23 and c[2] == 0:  # exact match only
                 return y + cam[1]
         else:
             break
     return None
+
+def getWall(p, cam):
+    leftX  = int(p[X] - cam[0])
+    rightX = int(p[X] - cam[0] + p[W])
+
+    wallLeft  = False
+    wallRight = False
+
+    # Sample multiple heights along the player's side
+    for frac in [0.2, 0.4, 0.6, 0.8]:
+        sampleY = int(p[Y] - cam[1] + p[H] * frac)
+        if not (0 <= sampleY < h):
+            continue
+
+        if 0 <= leftX < w:
+            c = screen.get_at((leftX, sampleY))[:3]
+            if c[0] == 59 and c[1] == 20 and c[2] == 0:
+                wallLeft = True
+
+        if 0 <= rightX < w:
+            c = screen.get_at((rightX, sampleY))[:3]
+            if c[0] == 59 and c[1] == 20 and c[2] == 0:
+                wallRight = True
+
+    return wallLeft, wallRight
 
 def updatePhysics(p, vel, cam, isJumping, invincibility, isRolling):
     p[Y] += vel[1]
@@ -374,6 +482,14 @@ def updatePhysics(p, vel, cam, isJumping, invincibility, isRolling):
             p[Y] = groundY - 50 - p[H]
             vel[1] = 0
             isJumping = False
+
+    wallLeft, wallRight = getWall(p, cam)
+    if wallLeft and vel[0] < 0:
+        vel[0] = 0
+        p[X] = int(cam[0] + (int(p[X] - cam[0]) + 1))  # snap to just right of wall
+    if wallRight and vel[0] > 0:
+        vel[0] = 0
+        p[X] = int(cam[0] + (int(p[X] + p[W] - cam[0]) - p[W] - 1))  # snap to just left of wall
 
     if p[Y] > h + 200:
         p[X] = 200
@@ -389,7 +505,7 @@ def updatePhysics(p, vel, cam, isJumping, invincibility, isRolling):
 
     return isJumping, invincibility, fallDeath, isRolling
 
-def handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast):
+def handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast, rollFrame):
     keys = key.get_pressed()
 
     if invincibility < 100 or True:
@@ -406,6 +522,7 @@ def handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast):
                     isRolling = False
                 elif isJumping == False:
                     isRolling = True
+                    rollFrame = 0.0
         else:
             xPressedLast = False
 
@@ -420,28 +537,35 @@ def handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast):
             else:
                 vel[0] += 0.25 + max(0.05, abs(vel[0]) * 0.02)
 
-    if isJumping:
+    if isRolling:
+        speed = abs(vel[0])
+        rollFrame += 0.2 + speed * 0.02
+    elif isJumping:
         p[ROW] = 3
         p[COL] = 0
-    elif isRolling == False:
-        moving = False
-        if keys[K_LEFT] or keys[K_RIGHT]:
-            moving = True
+    else:
+        moving = keys[K_LEFT] or keys[K_RIGHT]
 
-        if keys[K_LEFT]:
-            p[ROW] = 1
-        elif keys[K_RIGHT]:
-            p[ROW] = 0
-
-        if moving == False:
-            p[ROW] = 2
-            p[COL] = 0
-        else:
-            speed = abs(vel[0])
-            p[COL] += 0.1 + speed * 0.03
-            numFrames = len(sonicPics[p[ROW]])
-            if p[COL] >= numFrames:
+        if not moving and abs(vel[0]) > 6.0:
+            p[ROW] = 4
+            p[COL] += 0.15
+            if p[COL] >= len(sonicPics[4]):
                 p[COL] = 0
+        else:
+            if keys[K_LEFT]:
+                p[ROW] = 1
+            elif keys[K_RIGHT]:
+                p[ROW] = 0
+
+            if not moving:
+                p[ROW] = 2
+                p[COL] = 0
+            else:
+                speed = abs(vel[0])
+                p[COL] += 0.1 + speed * 0.03
+                numFrames = len(sonicPics[p[ROW]])
+                if p[COL] >= numFrames:
+                    p[COL] = 0
 
     if keys[K_LEFT] == False and keys[K_RIGHT] == False:
         fric = 0.025 if isRolling else 0.12
@@ -453,18 +577,25 @@ def handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast):
             if vel[0] > 0: vel[0] = 0
 
     maxSpeed = 22 if isRolling else 16
-
     vel[0] = max(-maxSpeed, min(maxSpeed, vel[0]))
     p[X] += vel[0]
     vel[1] += 1
 
-    return isJumping, isRolling, xPressedLast
+    MAP_LEFT  = 0
+    MAP_RIGHT = 30959
+    p[X] = max(MAP_LEFT, min(p[X], MAP_RIGHT - p[W]))
 
-def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPad, monitor, star, powerTimer):
+    return isJumping, isRolling, xPressedLast, rollFrame
+
+def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPad, monitor, star, powerTimer, rollFrame, vel):
     cam[0] += ((p[X] - w // 2) - cam[0]) * 0.08
-    cam[1] += ((p[Y] - h * 2 // 3) - cam[1]) * 0.08
+    cam[1] += ((p[Y] - h // 2) - cam[1]) * 0.08
 
-    screen.blit(bgImg, (-cam[0], -2720 - cam[1]))
+    # Clamp camera so it never shows outside the background
+    BG_W, BG_H = 30959, 3672
+    cam[0] = max(0, min(cam[0], BG_W - w))
+    cam[1] = max(-2176, min(cam[1], BG_H - 2176 - h))
+    screen.blit(bgImg, (-cam[0], -2176 - cam[1]))
 
     drawHud(cam, coinCount, lives, coins, elapsedTime, powerTimer)
     drawDroppedCoins(cam, droppedCoins)
@@ -480,29 +611,44 @@ def render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bomb
 
     if shouldDraw:
         if isRolling == True:
-            drawX  = int(p[X] - cam[0] + p[W] // 2)
-            drawY  = int(p[Y] - cam[1] + p[H] // 2)
-            radius = int(p[W] // 2)
+            if rollFrame < 5:
+                frame = sonicRollStart[int(rollFrame)]
+            else:
+                frame = sonicBallLoop[0]
 
-            ballColor = blue
-            if godMode:
-                if powerTimer % 4 < 2:
-                    ballColor = yellow
+            if vel[0] < 0:
+                frame = transform.flip(frame, True, False)
 
-            draw.circle(screen, ballColor, (drawX, drawY), radius)
-            draw.circle(screen, white,     (drawX, drawY), radius - 10, 3)
-        else:
-            frame       = sonicPics[p[ROW]][int(p[COL])]
-            frameScaled = transform.scale(frame, (SPRITE_W, SPRITE_H))
+            origW = frame.get_width()
+            origH = frame.get_height()
+            frameScaled = transform.scale(frame, (origW * 3, origH * 3))
 
             if godMode and (powerTimer % 4 < 2):
-                tintSurf = Surface((SPRITE_W, SPRITE_H), SRCALPHA)
+                tintSurf = Surface((origW * 3, origH * 3), SRCALPHA)
                 tintSurf.fill((255, 255, 0, 140))
                 frameScaled = frameScaled.copy()
                 frameScaled.blit(tintSurf, (0, 0), special_flags=BLEND_RGBA_MULT)
 
-            drawX = p[X] - cam[0] - (SPRITE_W - p[W]) // 2
-            drawY = p[Y] - cam[1] - (SPRITE_H - p[H]) // 2
+            drawX = p[X] - cam[0] - (origW * 3 - p[W]) // 2
+            drawY = p[Y] - cam[1] - (origH * 3 - p[H]) // 2
+            screen.blit(frameScaled, (drawX, drawY))
+        else:
+            frame = sonicPics[p[ROW]][int(p[COL])]
+            origW = frame.get_width()
+            origH = frame.get_height()
+            frameScaled = transform.scale(frame, (origW * 3, origH * 3))
+
+            if (p[ROW] == 4 or p[ROW] == 3) and vel[0] < 0:
+                frameScaled = transform.flip(frameScaled, True, False)
+
+            if godMode and (powerTimer % 4 < 2):
+                tintSurf = Surface((origW * 3, origH * 3), SRCALPHA)
+                tintSurf.fill((255, 255, 0, 140))
+                frameScaled = frameScaled.copy()
+                frameScaled.blit(tintSurf, (0, 0), special_flags=BLEND_RGBA_MULT)
+
+            drawX = p[X] - cam[0] - (origW * 3 - p[W]) // 2
+            drawY = p[Y] - cam[1] - (origH * 3 - p[H]) // 2
             screen.blit(frameScaled, (drawX, drawY))
 
             if godMode:
@@ -594,13 +740,14 @@ def mainMenu():
 
 def playLevel():
     c = time.Clock()
-    p   = [200, 550, 80, 80, 0, 0]
+    p   = [200, 100, 80, 80, 0, 0]
     vel = [0, 0]
     cam = [0, 0]
 
     isJumping     = False
     isRolling     = False
     xPressedLast  = False
+    rollFrame     = 0.0
     invincibility = 0
     powerTimer    = 0
 
@@ -615,21 +762,21 @@ def playLevel():
     ]
 
     enemies = [
-        [600, 400, 50, 50, 400, 900, 3]
+        [600, 405, 140, 100, 400, 1000, 2, 0.0]
     ]
 
     fishes = [
-        [450, 650, 45, 45, False, 0.0, 650, 60]
+        [450, 650, 100, 100, False, 0.0, 650, 60, 0.0]
     ]
 
     bombers = [
-        [1400, 250, 60, 40, 1100, 1700, 2, 0, False]
+        [1400, 250, 110, 80, 1100, 1700, 2, 0, False, 0.0]
     ]
     projectiles  = []
     droppedCoins = []
 
     winBox  = [2600, 350, 100, 100]
-    jumpPad = [500, 430, 60, 20]
+    jumpPad = [500, 430, 120, 80, False, 0]
 
     monitor = [1800, 400, 60, 60, False]
     star    = [0.0, 0.0, False, 0.0]
@@ -640,9 +787,6 @@ def playLevel():
                 return "menu"
 
         if lives <= 0:
-            screen.fill((0, 0, 0))
-            display.flip()
-            time.wait(3000)
             return "menu"
 
         elapsedTime += 1.0 / 60.0
@@ -651,7 +795,7 @@ def playLevel():
 
         godMode = powerTimer > 0
 
-        isJumping, isRolling, xPressedLast = handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast)
+        isJumping, isRolling, xPressedLast, rollFrame = handleInput(p, vel, isJumping, invincibility, isRolling, xPressedLast, rollFrame)
         isJumping, invincibility, fallDeath, isRolling = updatePhysics(p, vel, cam, isJumping, invincibility, isRolling)
 
         if fallDeath == True:
@@ -673,12 +817,19 @@ def playLevel():
 
         playerRect = Rect(p[X], p[Y], p[W], p[H])
 
+        if jumpPad[4] == True:
+            jumpPad[5] -= 1
+            if jumpPad[5] <= 0:
+                jumpPad[4] = False
+
         if playerRect.colliderect(Rect(jumpPad[0], jumpPad[1], jumpPad[2], jumpPad[3])):
             vel[1]    = -32
             isJumping = True
             isRolling = False
             p[ROW]    = 3
             p[COL]    = 0
+            jumpPad[4] = True
+            jumpPad[5] = 15
 
         if monitor[4] == False:
             if playerRect.colliderect(Rect(monitor[0], monitor[1], monitor[2], monitor[3])):
@@ -701,7 +852,7 @@ def playLevel():
         if playerRect.colliderect(Rect(winBox[0], winBox[1], winBox[2], winBox[3])):
             return drawVictoryScreen(elapsedTime)
 
-        render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPad, monitor, star, powerTimer)
+        render(p, cam, coinCount, lives, invincibility, coins, enemies, fishes, bombers, projectiles, droppedCoins, isRolling, elapsedTime, winBox, jumpPad, monitor, star, powerTimer, rollFrame, vel)
 
         display.flip()
         c.tick(60)

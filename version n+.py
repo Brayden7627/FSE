@@ -34,7 +34,7 @@ ROW = 4
 COL = 5
 
 
-bgImg     = transform.scale(image.load("pics/Sonic BG final.png"), (36720, 4590))
+bgImg     = transform.scale(image.load("pics/alternateBG.png"), (36720, 4590))
 menuBgImg = transform.scale(image.load("pics/sonicMenuBG.png"), (w, h))
 
 def addPics(folder, name, start, end):
